@@ -102,10 +102,14 @@ check_tor_port
 rotate_tor_ip
 test_proxy
 
-echo
-echo "🌐 Checking public IPs..."
+# Show Real IP
 real_ip=$(curl -s https://ifconfig.me || echo "Unavailable")
-tor_ip=$($CHAIN_BIN curl -s --max-time 10 https://ifconfig.me || echo "Unavailable")
+
+# Show Tor IP via proxychains
+tor_ip=$($CHAIN_BIN curl -s --max-time 10 https://ifconfig.me 2>/dev/null || echo "Unavailable")
+
+# Display IPs
+echo "🌐 Checking public IPs..."
 echo "🔍 Real IP: $real_ip"
 echo "🕳️ Tor IP:  $tor_ip"
 echo
