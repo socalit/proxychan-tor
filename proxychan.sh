@@ -1,0 +1,114 @@
+#!/bin/bash
+# proxychan — A tool by socalit to run commands anonymously through proxychains + Tor with automatic IP rotation
+
+CHAIN_BIN=$(command -v proxychains4 || command -v proxychains)
+TOR_BIN=$(command -v tor)
+TORRC_FILE="/etc/tor/torrc"
+CONF_FILE="/etc/proxychains4.conf"
+BIN_PATH="/usr/local/bin/proxychan"
+
+# --install logic
+if [[ "$1" == "--install" ]]; then
+  echo "📦 Installing proxychan system-wide (by socalit)..."
+  if [[ ! -f "$0" ]]; then
+    echo "[✖] Script not found. Please run this command from the script directory."
+    exit 1
+  fi
+  sudo cp "$0" "$BIN_PATH"
+  sudo chmod +x "$BIN_PATH"
+  echo "[✓] Installed to $BIN_PATH"
+  echo "✅ You can now run: proxychan curl https://ifconfig.me"
+  exit 0
+fi
+
+install_tor_if_needed() {
+  if [[ -z "$TOR_BIN" ]]; then
+    echo "[!] Tor not found. Installing..."
+    sudo apt update
+    sudo apt install tor -y
+    TOR_BIN=$(command -v tor)
+  fi
+}
+
+patch_torrc() {
+  if ! grep -q "ControlPort 9051" "$TORRC_FILE"; then
+    echo "[!] ControlPort 9051 not found in $TORRC_FILE. Adding it..."
+    echo -e "\n## Added by proxychan (socalit)\nControlPort 9051\nCookieAuthentication 0" | sudo tee -a "$TORRC_FILE" > /dev/null
+    echo "[✓] Torrc updated. Restarting Tor..."
+    sudo systemctl restart tor || sudo service tor restart
+    sleep 5
+  fi
+}
+
+start_tor() {
+  if ! pgrep tor > /dev/null; then
+    echo "[!] Starting Tor service..."
+    sudo systemctl start tor || sudo service tor start
+    sleep 5
+  fi
+  if ! pgrep tor > /dev/null; then
+    echo "[✖] Tor failed to start. Check logs with: journalctl -xeu tor"
+    exit 1
+  fi
+}
+
+check_tor_port() {
+  if ! ss -tuln | grep -q 9050; then
+    echo "[✖] Tor is not listening on 127.0.0.1:9050"
+    exit 1
+  fi
+}
+
+rotate_tor_ip() {
+  echo "[↻] Requesting new Tor circuit..."
+  echo -e 'AUTHENTICATE ""\nSIGNAL NEWNYM\nQUIT' | nc 127.0.0.1 9051 > /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo "[!] Could not rotate IP — ControlPort may not be active."
+  else
+    echo "[✓] New Tor IP requested."
+    sleep 3
+  fi
+}
+
+test_proxy() {
+  echo "[✓] Verifying Tor proxy routing..."
+  $CHAIN_BIN curl -s --max-time 10 https://check.torproject.org | grep -q "Congratulations"
+  if [[ $? -eq 0 ]]; then
+    echo "[✓] Proxychains is routing through Tor."
+  else
+    echo "[!] Proxychains is NOT routing through Tor. Check $CONF_FILE"
+    exit 1
+  fi
+}
+
+if [[ ! -x "$CHAIN_BIN" ]]; then
+  echo "[✖] proxychains not found. Installing..."
+  sudo apt update
+  sudo apt install proxychains4 -y
+  CHAIN_BIN=$(command -v proxychains4 || command -v proxychains)
+fi
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage:"
+  echo "  proxychan <command>       Run command anonymously through Tor"
+  echo "  proxychan --install        Install system-wide to /usr/local/bin"
+  exit 1
+fi
+
+install_tor_if_needed
+patch_torrc
+start_tor
+check_tor_port
+rotate_tor_ip
+test_proxy
+
+echo
+echo "🌐 Checking public IPs..."
+real_ip=$(curl -s https://ifconfig.me || echo "Unavailable")
+tor_ip=$($CHAIN_BIN curl -s --max-time 10 https://ifconfig.me || echo "Unavailable")
+echo "🔍 Real IP: $real_ip"
+echo "🕳️ Tor IP:  $tor_ip"
+echo
+
+echo "🚀 Running: $CHAIN_BIN $*"
+exec $CHAIN_BIN "$@"
