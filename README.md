@@ -18,9 +18,9 @@ Built by [socalit](https://github.com/socalit) for quick privacy and recon tasks
 ---
 ## Use it globally:
 
-proxychan curl https://ifconfig.me
-proxychan whois example.com
-proxychan nmap -Pn -sT scanme.nmap.org
+## proxychan curl https://ifconfig.me
+## proxychan whois example.com
+## proxychan nmap -Pn -sT scanme.nmap.org
 
 ---
 
