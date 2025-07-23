@@ -9,7 +9,7 @@ BIN_PATH="/usr/local/bin/proxychan"
 
 # --install logic
 if [[ "$1" == "--install" ]]; then
-  echo "Installing proxychan system-wide (by socalit)..."
+  echo "📦 Installing proxychan system-wide (by socalit)..."
   if [[ ! -f "$0" ]]; then
     echo "[✖] Script not found. Please run this command from the script directory."
     exit 1
@@ -17,7 +17,7 @@ if [[ "$1" == "--install" ]]; then
   sudo cp "$0" "$BIN_PATH"
   sudo chmod +x "$BIN_PATH"
   echo "[✓] Installed to $BIN_PATH"
-  echo "You can now run: proxychan curl https://ifconfig.me"
+  echo "✅ You can now run: proxychan curl https://ifconfig.me"
   exit 0
 fi
 
