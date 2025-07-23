@@ -9,7 +9,7 @@ BIN_PATH="/usr/local/bin/proxychan"
 
 # --install logic
 if [[ "$1" == "--install" ]]; then
-  echo "📦 Installing proxychan system-wide (by socalit)..."
+  echo "Installing proxychan system-wide (by socalit)..."
   if [[ ! -f "$0" ]]; then
     echo "[✖] Script not found. Please run this command from the script directory."
     exit 1
@@ -17,7 +17,7 @@ if [[ "$1" == "--install" ]]; then
   sudo cp "$0" "$BIN_PATH"
   sudo chmod +x "$BIN_PATH"
   echo "[✓] Installed to $BIN_PATH"
-  echo "✅ You can now run: proxychan curl https://ifconfig.me"
+  echo "You can now run: proxychan curl https://ifconfig.me"
   exit 0
 fi
 
@@ -31,10 +31,21 @@ install_tor_if_needed() {
 }
 
 patch_torrc() {
-  if ! grep -q "ControlPort 9051" "$TORRC_FILE"; then
-    echo "[!] ControlPort 9051 not found in $TORRC_FILE. Adding it..."
-    echo -e "\n## Added by proxychan (socalit)\nControlPort 9051\nCookieAuthentication 0" | sudo tee -a "$TORRC_FILE" > /dev/null
-    echo "[✓] Torrc updated. Restarting Tor..."
+  local updated=0
+  if ! grep -q "^ControlPort 9051" "$TORRC_FILE"; then
+    echo "ControlPort 9051" | sudo tee -a "$TORRC_FILE" > /dev/null
+    updated=1
+  fi
+  if ! grep -q "^CookieAuthentication" "$TORRC_FILE"; then
+    echo "CookieAuthentication 0" | sudo tee -a "$TORRC_FILE" > /dev/null
+    updated=1
+  fi
+  if ! grep -q "^SOCKSPort 9050" "$TORRC_FILE"; then
+    echo "SOCKSPort 9050" | sudo tee -a "$TORRC_FILE" > /dev/null
+    updated=1
+  fi
+  if [[ $updated -eq 1 ]]; then
+    echo "[✓] torrc updated. Restarting Tor..."
     sudo systemctl restart tor || sudo service tor restart
     sleep 5
   fi
@@ -53,8 +64,9 @@ start_tor() {
 }
 
 check_tor_port() {
-  if ! ss -tuln | grep -q 9050; then
+  if ! ss -tuln | grep -q ":9050"; then
     echo "[✖] Tor is not listening on 127.0.0.1:9050"
+    echo "    Try restarting: sudo systemctl restart tor"
     exit 1
   fi
 }
@@ -91,7 +103,7 @@ fi
 if [[ $# -lt 1 ]]; then
   echo "Usage:"
   echo "  proxychan <command>       Run command anonymously through Tor"
-  echo "  proxychan --install        Install system-wide to /usr/local/bin"
+  echo "  proxychan --install       Install system-wide to /usr/local/bin"
   exit 1
 fi
 
@@ -109,6 +121,7 @@ real_ip=$(curl -s https://ifconfig.me || echo "Unavailable")
 tor_ip=$($CHAIN_BIN curl -s --max-time 10 https://ifconfig.me 2>/dev/null || echo "Unavailable")
 
 # Display IPs
+echo
 echo "🌐 Checking public IPs..."
 echo "🔍 Real IP: $real_ip"
 echo "🕳️ Tor IP:  $tor_ip"
