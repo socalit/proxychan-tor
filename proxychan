@@ -1,5 +1,6 @@
 #!/bin/bash
 # proxychan — A tool by socalit to run commands anonymously through proxychains + Tor with automatic IP rotation
+# Version: v1.3
 
 CHAIN_BIN=$(command -v proxychains4 || command -v proxychains)
 TOR_BIN=$(command -v tor)
@@ -17,7 +18,7 @@ if [[ "$1" == "--install" ]]; then
   sudo cp "$0" "$BIN_PATH"
   sudo chmod +x "$BIN_PATH"
   echo "[✓] Installed to $BIN_PATH"
-  echo "✅ You can now run: proxychan curl https://icanhazip.com"
+  echo "✅ You can now run: proxychan curl https://check.torproject.org/api/ip"
   exit 0
 fi
 
@@ -116,10 +117,10 @@ rotate_tor_ip
 test_proxy
 
 # Show Real IP
-real_ip=$(curl -s https://icanhazip.com || echo "Unavailable")
+real_ip=$(curl -s https://api.ipify.org || echo "Unavailable")
 
-# Show Tor IP via proxychains
-tor_ip=$($CHAIN_BIN curl -s --max-time 10 https://icanhazip.com 2>/dev/null || echo "Unavailable")
+# Show Tor IP via proxychains (uses check.torproject.org's /api/ip)
+tor_ip=$($CHAIN_BIN curl -s --max-time 10 https://check.torproject.org/api/ip 2>/dev/null | grep -oP '"IP":"\K[0-9.]+' || echo "Unavailable")
 
 # Display IPs and validate
 echo
