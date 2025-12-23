@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="Lenovo WiFi Whitelist Remover" width="100%">
+</p>
+
 # proxychan-tor
 
 Run any Linux command anonymously through [Tor](https://www.torproject.org/) using `proxychains` — with automatic Tor startup, IP rotation, and verification.
