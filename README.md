@@ -1,8 +1,12 @@
-<p align="center">
-  <img src="assets/banner.png" alt="Lenovo WiFi Whitelist Remover" width="100%">
-</p>
+![proxychan-tor](assets/banner.png)
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-%23FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/socal370xs)
+[![Linux](https://img.shields.io/badge/Linux-Kali%20%7C%20Debian-yellow?logo=linux)](https://www.kali.org/)
+[![Tor](https://img.shields.io/badge/Tor-Enabled-purple?logo=torproject&logoColor=white)](https://www.torproject.org/)
+[![Proxy](https://img.shields.io/badge/Proxy-Rotation-blue)](#)
+[![Anonymity](https://img.shields.io/badge/Use-Privacy%20Focused-success)](#)
+[![License](https://img.shields.io/badge/license-MIT-purple)](/LICENSE)
+
 
 # proxychan-tor
 
